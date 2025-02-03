@@ -1,0 +1,9 @@
+Attribution and Licensing Information
+=====================================
+
+This project includes a dataset which is licensed under the Creative Commons Attribution 4.0 International (CC-BY-4.0).
+
+Dataset: Occupancy Detection
+Creator: Pooria Mostafapoor
+Source: <https://www.kaggle.com/datasets/pooriamst/occupancy-detection/data>
+License: Creative Commons Attribution 4.0 International (CC-BY-4.0) <https://creativecommons.org/licenses/by/4.0/>
