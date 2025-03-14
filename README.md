@@ -1,6 +1,8 @@
 
 # Milestone 3: Final Project
 
+[LINK TO MODEL 2](./model2.ipynb)
+
 ### Data Preprocessing
 Our dataset, sourced from Kaggle, is well-formatted and requires minimal preprocessing. We parse the CSV file and store each column in a Pandas DataFrame for easier manipulation. 
 
