@@ -1,4 +1,56 @@
 
+# Milestone 3: Final Project
+
+### Data Preprocessing
+Our dataset, sourced from Kaggle, is well-formatted and requires minimal preprocessing. We parse the CSV file and store each column in a Pandas DataFrame for easier manipulation. 
+
+The dataset consists of **17,895 observations** and **8 columns**, including environmental metrics (**Temperature, Humidity, Light, CO2, HumidityRatio**), a date column, an ID, and an **Occupancy** column. The goal is to predict occupancy based on environmental factors. Features like **Light, CO2, and HumidityRatio** are strongly correlated with occupancy and serve as key predictive variables.
+
+### Model Description:
+We structured our model as a **Hidden Markov Model (HMM)**, where the hidden states represent **room occupancy (occupied/unoccupied)**, and the observed variables are environmental sensor readings. The model assumes that occupancy states evolve over time and that each sensor reading is probabilistically dependent on the hidden state at that moment.
+
+We selected HMM because:
+- Occupancy follows temporal patterns, making HMM well-suited for modeling sequential dependencies.
+- The **Viterbi algorithm** allows us to infer the most likely sequence of occupancy states given the sensor data.
+
+### Training:
+Instead of using a Naïve Bayes approach, we now estimate the following HMM parameters:
+
+- **Initial State Probabilities (\pi):** Estimated from the proportion of occupied vs. unoccupied instances in the dataset.
+- **Transition Probabilities (A):** Computed from observed state transitions over time.
+- **Emission Probabilities (B):** Modeled using **Gaussian distributions** to represent the probability of sensor readings given an occupancy state.
+
+We use:
+- **Maximum Likelihood Estimation (MLE)** to determine initial and transition probabilities.
+- **Gaussian Mixture Models (GMM)** to estimate emission probabilities for continuous sensor features.
+
+### CPTs:
+Instead of Naïve Bayes conditional probability tables, our CPTs now reflect **HMM emission probabilities**. These probability distributions define how environmental variables relate to hidden occupancy states. The computed tables are included in our Jupyter Notebook [here](./model2.ipynb).
+
+## Agent Definition
+As smart building technology advances, real-time room occupancy detection is crucial for optimizing energy usage and space management. This project presents a probabilistic AI-driven approach using environmental sensor data, including **temperature, humidity, light levels, and CO₂ concentrations**.
+
+Instead of using a standard classification model, we employ a **Hidden Markov Model** to capture **sequential dependencies** in sensor readings. This enables more accurate occupancy predictions by dynamically updating probability estimates as new data arrives.
+
+### Utility-Based Decision Making
+The agent evaluates environmental sensor readings to determine the probability of room occupancy. The **Viterbi algorithm** is used to infer the most likely occupancy state sequence over time.
+
+### Probabilistic Modeling
+HMM is used as a probabilistic graphical model where **hidden states (occupancy)** are inferred from **observations (sensor data)**. Unlike static classifiers, this model continuously refines predictions as new sensor values are observed.
+
+### Conclusion
+The HMM-based model improves over our previous approach by incorporating **time-series dependencies**, leading to more robust occupancy predictions. Performance evaluation will focus on comparing accuracy across different sensor combinations to identify the most reliable indicators of occupancy.
+
+## Libraries Used
+- `pgmpy` for HMM modeling [(pgmpy Documentation)](https://pgmpy.org/)
+- `scikit-learn` for data preprocessing [(scikit-learn)](https://scikit-learn.org/)
+- `seaborn` & `matplotlib` for visualization
+- Utilized GenAI to help decide which of the models we learned would best represent our data, and helped with pseudo-code.
+
+
+
+
+---
 # Milestone 2: Build First Agent
 
 ## Update: 
