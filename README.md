@@ -56,9 +56,8 @@ Instead of using a Naïve Bayes approach, we now estimate the following HMM para
 - **Transition Probabilities ($A$):** Computed from observed state transitions over time.
 - **Emission Probabilities ($B$):** Modeled using **Gaussian distributions** to represent the probability of sensor readings given an occupancy state.
 
-We use:
-- **Maximum Likelihood Estimation (MLE)** to determine initial and transition probabilities.
-- **Gaussian Mixture Models (GMM)** to estimate emission probabilities for continuous sensor features. For instance, light levels under “occupied” conditions might cluster around several different values (e.g., bright overhead lighting, partial daylight, etc.) rather than following a single bell‐shaped curve. A Gaussian Mixture Model lets us represent each hidden state’s emission probability as a weighted sum of multiple Gaussian components, capturing data that are not well described by just one Gaussian. In the context of our HMM, each hidden state (occupied/unoccupied) has its own GMM that defines the probability of observing certain sensor readings (emissions). This flexibility helps our model learn more nuanced patterns in the data, which ultimately improves occupancy inference compared to assuming a single Gaussian distribution per state.
+
+Instead of using **Gaussian Mixture Models (GMM)**, we assume that each feature (e.g., light, CO₂, humidity ratio) follows a **single Gaussian distribution** per occupancy state. The **mean** and **standard deviation** of each feature are estimated from the training data using Maximum Likelihood Estimation (MLE). The **Viterbi algorithm** is then used to infer the most probable sequence of occupancy states based on sensor readings over time.
 ![snippet](train.png "snippet")
 
 
