@@ -6,7 +6,41 @@
 ### Data Preprocessing
 Our dataset, sourced from Kaggle, is well-formatted and requires minimal preprocessing. We parse the CSV file and store each column in a Pandas DataFrame for easier manipulation. 
 
-The dataset consists of **17,895 observations** and **8 columns**, including environmental metrics (**Temperature, Humidity, Light, CO2, HumidityRatio**), a date column, an ID, and an **Occupancy** column. The goal is to predict occupancy based on environmental factors. Features like **Light, CO2, and HumidityRatio** are strongly correlated with occupancy and serve as key predictive variables.
+The dataset consists of **17,895 observations** and **8 columns**, including environmental metrics (**Temperature, Humidity, Light, CO2, HumidityRatio**), a date column, an ID, and an **Occupancy** column. The goal is to predict occupancy based on environmental factors. Features like **Light, CO2, and HumidityRatio** are strongly correlated with occupancy and serve as key predictive variables. 
+
+### Overview of Each Variable
+
+Below is a brief description of each variable in our dataset and how it contributes to the **HMM**‐based occupancy detection model. The figure below illustrates how our hidden state (occupancy) is inferred from these observed variables.
+
+1. **Temperature**  
+   Represents the ambient temperature (in °C). While temperature alone may not strongly indicate occupancy, it can rise slightly with more people present or when HVAC systems respond to occupancy.
+
+2. **Humidity**  
+   Indicates the amount of water vapor in the air. Occupants breathing or changes in ventilation can cause subtle variations in humidity levels.
+
+3. **Light**  
+   Measures the brightness in the room (in Lux). This feature is often highly indicative of occupancy since people typically turn on lights when a room is in use.
+
+4. **CO₂**  
+   Carbon dioxide concentration (in ppm). Occupants exhale CO₂, so higher levels typically correlate with more people in a confined space.
+
+5. **HumidityRatio**  
+   A derived measure combining temperature and humidity. This ratio can provide an additional signal related to air quality, which may change with human presence.
+
+6. **Date**  
+   Records the date and time of each observation. While not directly modeled in our HMM emissions, it could be used for *contextual* or *time‐based* features (e.g., detecting occupancy patterns over the workday).
+
+7. **ID**  
+   An identifier for each observation (or sensor reading). Primarily used for data management and not directly in the predictive model.
+
+8. **Occupancy**  
+   The ground‐truth label indicating whether the room was occupied (1) or unoccupied (0). In our Hidden Markov Model, this is the *hidden state* we aim to infer from the sensor variables.
+
+---
+
+![alt text](agent.png "agent")
+
+**Figure:** Simplified diagram of our HMM. The hidden states $S_1, S_2, \dots$ represent room occupancy (occupied/unoccupied), while the observed variables $X_1, X_2, \dots$ are the sensor readings (temperature, humidity, light, CO₂, etc.). The transition probabilities $P(S_t \mid S_{t-1})$ capture how occupancy evolves over time, and the emission probabilities $P(X_t \mid S_t)$ describe how likely each sensor reading is, given a particular occupancy state.
 
 ### Model Description:
 We structured our model as a **Hidden Markov Model (HMM)**, where the hidden states represent **room occupancy (occupied/unoccupied)**, and the observed variables are environmental sensor readings. The model assumes that occupancy states evolve over time and that each sensor reading is probabilistically dependent on the hidden state at that moment.
@@ -18,16 +52,31 @@ We selected HMM because:
 ### Training:
 Instead of using a Naïve Bayes approach, we now estimate the following HMM parameters:
 
-- **Initial State Probabilities (\pi):** Estimated from the proportion of occupied vs. unoccupied instances in the dataset.
-- **Transition Probabilities (A):** Computed from observed state transitions over time.
-- **Emission Probabilities (B):** Modeled using **Gaussian distributions** to represent the probability of sensor readings given an occupancy state.
+- **Initial State Probabilities ($\pi$):** Estimated from the proportion of occupied vs. unoccupied instances in the dataset.
+- **Transition Probabilities ($A$):** Computed from observed state transitions over time.
+- **Emission Probabilities ($B$):** Modeled using **Gaussian distributions** to represent the probability of sensor readings given an occupancy state.
 
 We use:
 - **Maximum Likelihood Estimation (MLE)** to determine initial and transition probabilities.
-- **Gaussian Mixture Models (GMM)** to estimate emission probabilities for continuous sensor features.
+- **Gaussian Mixture Models (GMM)** to estimate emission probabilities for continuous sensor features. For instance, light levels under “occupied” conditions might cluster around several different values (e.g., bright overhead lighting, partial daylight, etc.) rather than following a single bell‐shaped curve. A Gaussian Mixture Model lets us represent each hidden state’s emission probability as a weighted sum of multiple Gaussian components, capturing data that are not well described by just one Gaussian. In the context of our HMM, each hidden state (occupied/unoccupied) has its own GMM that defines the probability of observing certain sensor readings (emissions). This flexibility helps our model learn more nuanced patterns in the data, which ultimately improves occupancy inference compared to assuming a single Gaussian distribution per state.
+![snippet](train.png "snippet")
 
-### CPTs:
-Instead of Naïve Bayes conditional probability tables, our CPTs now reflect **HMM emission probabilities**. These probability distributions define how environmental variables relate to hidden occupancy states. The computed tables are included in our Jupyter Notebook [here](./model2.ipynb).
+
+
+### Conditional Probability Tables (CPTs)
+
+Instead of Naïve Bayes conditional probability tables, our CPTs now describe the entire HMM structure:
+
+- **Initial State Distribution ($\pi$)**  
+  The probability of being in each hidden state at the first timestep, $P(S_0)$.
+
+- **Transition Probabilities ($A$)**  
+  The probability of moving from one hidden state to another, $P(S_t \mid S_{t-1})$.
+
+- **Emission Probabilities ($B$)**  
+  The probability distributions governing how the sensor observations relate to hidden occupancy states, $P(X_t \mid S_t)$.
+
+Together, these components define the model’s conditional probability tables. Our **emission CPTs** reflect how temperature, humidity, light, and CO₂ values are generated by each occupancy state; the **transition CPT** encodes how occupancy evolves over time; and the **initial state distribution** indicates the likelihood of starting in each occupancy state. We include detailed tables and computations for all of these in our [Jupyter Notebook](./model2.ipynb).
 
 ## Agent Definition
 As smart building technology advances, real-time room occupancy detection is crucial for optimizing energy usage and space management. This project presents a probabilistic AI-driven approach using environmental sensor data, including **temperature, humidity, light levels, and CO₂ concentrations**.
@@ -40,17 +89,24 @@ The agent evaluates environmental sensor readings to determine the probability o
 ### Probabilistic Modeling
 HMM is used as a probabilistic graphical model where **hidden states (occupancy)** are inferred from **observations (sensor data)**. Unlike static classifiers, this model continuously refines predictions as new sensor values are observed.
 
-### Conclusion
-The HMM-based model improves over our previous approach by incorporating **time-series dependencies**, leading to more robust occupancy predictions. Performance evaluation will focus on comparing accuracy across different sensor combinations to identify the most reliable indicators of occupancy.
+## Conclusion
+
+Our HMM‐based approach has substantially improved upon our earlier model (now 96.21% accurate compared to a previous 66.98%) by capturing **time‐series dependencies** in the occupancy data. Unlike static classifiers, the HMM’s **transition probabilities** link occupancy states across consecutive timesteps, making the system more robust to noise and better able to handle gradual transitions (for instance, people entering or leaving a room). This temporal aspect helps smooth out momentary sensor spikes or dips, ultimately **boosting predictive accuracy** over the simpler model.
+
+Looking at our **accuracy metrics** and the **confusion matrix**, we see fewer misclassifications than in our Naïve Bayes–based approach, confirming that leveraging sequential patterns makes a difference. Performance does vary based on which sensors we include—light and CO₂ data appear particularly influential—so our final evaluation compares different subsets of sensors to see which combination yields the greatest improvement. 
+
+![results ](results.png "results")
+
+### Potential Improvements: 
+Beyond the current version, potential future work could involve:
+- Increasing the number of hidden states (e.g., representing “room partially occupied” vs. “fully occupied”).
+- Incorporating **time‐of‐day** or **day‐of‐week** features to capture predictable daily/weekly occupancy cycles.
 
 ## Libraries Used
 - `pgmpy` for HMM modeling [(pgmpy Documentation)](https://pgmpy.org/)
 - `scikit-learn` for data preprocessing [(scikit-learn)](https://scikit-learn.org/)
 - `seaborn` & `matplotlib` for visualization
 - Utilized GenAI to help decide which of the models we learned would best represent our data, and helped with pseudo-code.
-
-
-
 
 ---
 # Milestone 2: Build First Agent
